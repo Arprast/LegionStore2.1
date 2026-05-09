@@ -3,47 +3,79 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\ProductPurchases;
+use App\Models\ForgotPassword;
+use App\Models\Wallet; // Import Model Wallet
+use App\Models\Topup;  // Import Model Topup
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $table = 'users';
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    public $timestamps = true;
+    protected $keyType = 'integer';
+
     protected $fillable = [
         'name',
         'email',
+        'role',
         'password',
+        'otp',
+        'is_verified',
+        'phone_number' // <--- Tambahkan baris ini
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
-        'remember_token',
+        'otp'
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * RELASI BARU: Ke Wallet (Dompet Koin)
+     * Ini yang bikin saldo bisa muncul di profil
+     */
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id', 'id');
+    }
+
+    /**
+     * RELASI BARU: Ke Riwayat Topup
+     */
+    public function topups()
+    {
+        return $this->hasMany(Topup::class, 'user_id', 'id');
+    }
+
+    public function product_purchases()
+    {
+        return $this->hasMany(
+            ProductPurchases::class,
+            'user_id',
+            'id' 
+        );
+    }
+
+    public function forgot_passwords()
+    {
+        return $this->hasMany(
+            ForgotPassword::class,
+            'user_id',
+            'id' 
+        );
     }
 }
